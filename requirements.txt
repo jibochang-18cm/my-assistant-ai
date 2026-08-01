@@ -1,8 +1,20 @@
-ffers==25.12.19
-frozenlist==1.8.0
-fsspec==2026.7.0
-googleapis-common-protos==1.75.0
-grpcio==1.83.0
-h11==0.16.0
-hf-xet==1.5.2
-httpcore==1
+# Core Framework & Server
+fastapi>=0.100.0
+uvicorn[standard]>=0.22.0
+python-multipart>=0.0.6
+pydantic>=2.0
+
+# AI & LLM Integration
+openai>=1.0.0
+python-dotenv>=1.0.0
+
+# Vector Database & Embeddings
+chromadb>=0.4.0
+
+# PDF Processing
+pypdf>=3.10.0
+pdfplumber>=0.9.0
+
+# HTTP Client & Utilities
+requests>=2.31.0
+httpx>=0.24.0
