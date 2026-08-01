@@ -11,13 +11,13 @@ client = OpenAI(
 
 chroma_client = chromadb.PersistentClient(path="./chroma_db")
 collection = chroma_client.get_collection(name="course_materials")
-def ask_ai_assistant(query: str):
+def ask_ai_assistant_stream(query: str):
     collection = chroma_client.get_or_create_collection(name="course_materials")
     if collection.count() == 0:
         return "知识库目前是空的，请先在上方上传一份 PDF 课程讲义！",[]
     results = collection.query(
         query_texts=[query],
-        n_results=3
+        n_results=min(3,collection.count()) 
     )
     
     retrieved_docs = results['documents'][0]
@@ -37,12 +37,12 @@ def ask_ai_assistant(query: str):
                 {"role":"system","content":system_prompt},
                 {"role":"user","content":user_prompt}
             ],
-            temperature=0.3
+            temperature=0.3,
+            stream=True
         )
-        answer = response.choices[0].message.content
-        return answer, sources
-    if __name__ == "__main__":
-        question ="什么事TCP的三次握手？"
-        ans, src =ask_ai_assistant(question)
-        print(f"\nAI 回答:\n{ans}\n")
-        print(f"参考出处:{src}")
+        for chunk in response:
+            if chunk.choices and chunk.choices[0].delta.content:
+                yield chunk.choices[0].delta.content
+         
+        source_str = f"\n\n【参考出处】:{','.join(set(sources))}"
+        yield source_str

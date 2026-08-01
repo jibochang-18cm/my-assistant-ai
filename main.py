@@ -1,10 +1,11 @@
 from fastapi import FastAPI,UploadFile,File,HTTPException
+from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import shutil
 import os
 from ingest import process_pdf_and_store
-from rag import ask_ai_assistant
+from rag import ask_ai_assistant_stream
 app = FastAPI(title="高校课程 AI 助教 API")
 
 class QueryRequest(BaseModel):
@@ -37,14 +38,10 @@ async def chat(req:QueryRequest):
     """接口 2:向 AI 助教提问"""
     if not req.question.strip():
         raise HTTPException(status_code=400,detail="提问不能为空")
-    try:
-        answer, sources = ask_ai_assistant(req.question)
-        return{
-            "answer":answer,
-            "sources":sources
-        }     
-    except Exception as e:
-        raise HTTPException(status_code=500,detail=str(e))
+    return StreamingResponse(
+        ask_ai_assistant_stream(req.question),
+        media_type="text/event-stream"
+    )
     
 if __name__ == "__main__":
     import uvicorn
