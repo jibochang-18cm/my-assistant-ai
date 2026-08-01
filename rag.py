@@ -10,16 +10,18 @@ client = OpenAI(
 )
 
 chroma_client = chromadb.PersistentClient(path="./chroma_db")
-collection = chroma_client.get_collection(name="course_materials")
-def ask_ai_assistant_stream(query: str):
+
+def ask_ai_assistant_stream(query: str,history: list = []):
     collection = chroma_client.get_or_create_collection(name="course_materials")
     if collection.count() == 0:
-        return "知识库目前是空的，请先在上方上传一份 PDF 课程讲义！",[]
+       yield "知识库目前是空的，请先在上方上传一份 PDF 课程讲义！"
+       return
+
     results = collection.query(
         query_texts=[query],
-        n_results=min(3,collection.count()) 
+        n_results=min(3,collection.count())
     )
-    
+
     retrieved_docs = results['documents'][0]
     retrieved_metas = results['metadatas'][0]
     context_str = ""
@@ -27,22 +29,30 @@ def ask_ai_assistant_stream(query: str):
     for doc, meta in zip(retrieved_docs, retrieved_metas):
         context_str += f"\n--- 来自第{meta['page']}页 ---\n{doc}\n"
         sources.append(f"第{meta['page']}页")
-        system_prompt = """你是一位严谨的高校课程助教。请严格根据提供的课程讲义内容回答学生的提问。
-        如果讲义中没有提及，请直接诚实回答：“讲义中未找到相关内容”，不要编造答案。"""
-        user_prompt = f"【参考讲义片段】:\n{context_str}\n\n【学生提问】: {query}"
+
+    system_prompt = f"""你是一位严谨的高校课程助教。请严格根据提供的课程讲义内容回答学生的提问。
+        如果讲义中没有提及，请直接诚实回答：”讲义中未找到相关内容”，不要编造答案。
+
+        【参考讲义片段】 :
+        {context_str}"""
         
-        response = client.chat.completions.create(
+    messages =[{"role":"system","content":system_prompt}]
+    
+    for msg in history[-6:]:
+        messages.append({"role":msg["role"],"content":msg["content"]})
+        
+    messages.append({"role":"user","content":query})
+        
+    response = client.chat.completions.create(
             model ="deepseek-chat",
-            messages=[
-                {"role":"system","content":system_prompt},
-                {"role":"user","content":user_prompt}
-            ],
+            messages=messages,
             temperature=0.3,
             stream=True
         )
-        for chunk in response:
+    for chunk in response:
             if chunk.choices and chunk.choices[0].delta.content:
                 yield chunk.choices[0].delta.content
-         
+                
+    if sources:    
         source_str = f"\n\n【参考出处】:{','.join(set(sources))}"
         yield source_str
