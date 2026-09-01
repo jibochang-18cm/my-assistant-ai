@@ -3,35 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <title>AI 课程助教 - 多轮对话与 Markdown 渲染版</title>
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="static/style.css">
     <!-- 引入开源 Markdown 解析库 -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <style>
-        body { font-family: system-ui, -apple-system, sans-serif; max-width: 800px; margin: 30px auto; padding: 20px; line-height: 1.6; background: #f9fafb; color: #111827; }
-        .box { border: 1px solid #e5e7eb; padding: 20px; border-radius: 8px; margin-bottom: 20px; background: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        textarea { width: 100%; height: 70px; margin-top: 10px; box-sizing: border-box; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-family: inherit; }
-        button { background: #2563eb; color: white; border: none; padding: 9px 18px; border-radius: 6px; cursor: pointer; font-weight: 500; }
-        button:hover { background: #1d4ed8; }
-        
-        /* 对话列表样式 */
-        .chat-history { max-height: 500px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; margin-top: 15px; }
-        .message { padding: 12px 16px; border-radius: 8px; max-width: 85%; }
-        .user-msg { background: #eff6ff; align-self: flex-end; border: 1px solid #bfdbfe; }
-        .ai-msg { background: #f3f4f6; align-self: flex-start; border: 1px solid #e5e7eb; width: 100%; box-sizing: border-box; }
-        
-        /* Markdown 样式 */
-        .ai-msg pre { background: #1f2937; color: #f9fafb; padding: 12px; border-radius: 6px; overflow-x: auto; }
-        .ai-msg code { font-family: monospace; background: #e5e7eb; padding: 2px 5px; border-radius: 4px; }
-        .ai-msg pre code { background: transparent; padding: 0; }
-        .ai-msg blockquote { border-left: 4px solid #2563eb; margin: 0; padding-left: 10px; color: #4b5563; }
-    </style>
 </head>
 <body>
     <h2>🎓 高校课程 AI 助教 (多轮记忆 & Markdown)</h2>
-    
+
     <div class="box">
         <h3>1. 上传课程讲义 (PDF)</h3>
         <input type="file" id="pdfFile" accept=".pdf">
-        <button onclick="uploadPDF()">上传解析</button>
+        <button id="uploadBtn">上传解析</button>
         <p id="uploadStatus" style="margin-bottom:0; color:#4b5563;"></p>
     </div>
 
@@ -39,84 +22,10 @@
         <h3>2. 在线对话问答</h3>
         <div id="chatHistory" class="chat-history"></div>
         <textarea id="question" placeholder="例如：新加坡第三天的行程是什么？（之后可继续追问：请详细说说第一项）"></textarea><br><br>
-        <button onclick="askAI()">发送提问</button>
+        <button id="sendBtn">发送提问</button>
     </div>
 
-    <script>
-        // 前端维护的多轮对话历史数组
-        let history = [];
-
-        async function uploadPDF() {
-            const fileInput = document.getElementById('pdfFile');
-            if(!fileInput.files[0]) return alert("请先选择文件");
-            
-            const formData = new FormData();
-            formData.append('file', fileInput.files[0]);
-            
-            document.getElementById('uploadStatus').innerText = "解析中，请稍候...";
-            const res = await fetch('http://127.0.0.1:8000/api/upload', { method: 'POST', body: formData });
-            const data = await res.json();
-            document.getElementById('uploadStatus').innerText = data.message || data.detail;
-        }
-
-        async function askAI() {
-            const qInput = document.getElementById('question');
-            const q = qInput.value.trim();
-            if(!q) return;
-            
-            const chatHistory = document.getElementById('chatHistory');
-
-            // 1. 渲染用户的提问消息框
-            const userBox = document.createElement('div');
-            userBox.className = 'message user-msg';
-            userBox.innerText = q;
-            chatHistory.appendChild(userBox);
-
-            // 2. 创建 AI 回答消息框
-            const aiBox = document.createElement('div');
-            aiBox.className = 'message ai-msg';
-            aiBox.innerText = "AI 思考中...";
-            chatHistory.appendChild(aiBox);
-            
-            qInput.value = ""; // 清空输入框
-            chatHistory.scrollTop = chatHistory.scrollHeight; // 滚动到底部
-
-            let rawText = "";
-
-            try {
-                // 3. 发送提问并将 history 一并传给后端
-                const response = await fetch('http://127.0.0.1:8000/api/chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        question: q,
-                        history: history 
-                    })
-                });
-
-                const reader = response.body.getReader();
-                const decoder = new TextDecoder("utf-8");
-
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-                    
-                    const chunk = decoder.decode(value, { stream: true });
-                    rawText += chunk;
-                    
-                    // 使用 marked.parse() 实时把 Markdown 转化为漂亮的 HTML 渲染
-                    aiBox.innerHTML = marked.parse(rawText);
-                    chatHistory.scrollTop = chatHistory.scrollHeight;
-                }
-
-                // 4. 对话完成后，将本次对话记录压入 history 数组
-                history.push({ "role": "user", "content": q });
-                history.push({ "role": "assistant", "content": rawText });
-
-            } catch (err) {
-                aiBox.innerText = "发生错误: " + err.message;
-            }
-        }
-    </script>
+    <!-- 前端逻辑脚本（放在 body 末尾，保证 DOM 已加载） -->
+    <script src="static/script.js"></script>
 </body>
 </html>
