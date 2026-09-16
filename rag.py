@@ -2,6 +2,9 @@ import os
 import chromadb
 from openai import OpenAI
 from dotenv import load_dotenv
+
+from embeddings import embedding_function
+
 load_dotenv()
 DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
 client = OpenAI(
@@ -19,7 +22,10 @@ def _display_name(source_path: str) -> str:
     return name
 
 def ask_ai_assistant_stream(query: str,history: list = []):
-    collection = chroma_client.get_or_create_collection(name="course_materials")
+    collection = chroma_client.get_or_create_collection(
+        name="course_materials",
+        embedding_function=embedding_function
+    )
     if collection.count() == 0:
        yield "知识库目前是空的，请先在上方上传一份 PDF 课程讲义！"
        return

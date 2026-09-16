@@ -1,7 +1,10 @@
+import logging
 import os
 from fastapi import APIRouter, UploadFile, File, HTTPException
 
 from ingest import process_pdf_and_store
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -48,8 +51,10 @@ async def upload_pdf(file: UploadFile = File(...)):
     try:
         process_pdf_and_store(save_path)
         return {"status": "success", "message": f"文件 {file.filename}已成功解析并倒入知识库！"}
-    except Exception as e:
+    except Exception:
+        # 详细异常只记日志，不直接回给客户端——避免把内部报错信息（比如库的堆栈、文件路径）泄露出去
+        logger.exception("解析 PDF 失败: %s", save_path)
         # 解析失败就不该在磁盘上留下这个文件，避免出现"文件存在但没有真正入库"的不一致状态
         if os.path.exists(save_path):
             os.remove(save_path)
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="文件解析失败，请确认这是一份有效的 PDF 文件")

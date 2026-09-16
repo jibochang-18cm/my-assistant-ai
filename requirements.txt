@@ -9,6 +9,7 @@ python-dotenv>=1.0.0
 
 # Vector Database & Embeddings
 chromadb>=0.4.0
+sentence-transformers>=2.2.0
 
 # PDF Processing
 pypdf>=3.10.0
