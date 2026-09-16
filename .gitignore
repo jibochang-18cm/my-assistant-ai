@@ -8,3 +8,6 @@ chroma_db/
 *.log
 .DS_Store
 .env
+
+# 上传的课程讲义（体积大，不适合进版本库）
+uploads_*
