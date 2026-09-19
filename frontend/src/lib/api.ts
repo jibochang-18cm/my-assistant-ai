@@ -28,6 +28,22 @@ export async function uploadPdf(file: File): Promise<UploadResponse> {
   return res.json();
 }
 
+export interface DocumentInfo {
+  name: string;
+  chunk_count: number;
+  pages: number;
+  size: number | null;
+}
+
+export async function fetchDocuments(): Promise<DocumentInfo[]> {
+  const res = await fetch(`${BASE_URL}/api/documents`);
+  if (!res.ok) {
+    throw new Error(await parseErrorMessage(res));
+  }
+  const data: { documents: DocumentInfo[] } = await res.json();
+  return data.documents;
+}
+
 export interface ChatHistoryItem {
   role: "user" | "assistant";
   content: string;

@@ -2,6 +2,7 @@
 venv/
 __pycache__/
 *.pyc
+.pytest_cache/
 # chroma向量数据库缓存
 chroma_db/
 # 日志、临时文件

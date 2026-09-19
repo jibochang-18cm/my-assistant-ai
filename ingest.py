@@ -1,9 +1,8 @@
 import re
 import uuid
 import pypdf
-import chromadb
 
-from embeddings import embedding_function
+from db import get_collection
 
 CHUNK_SIZE = 300
 CHUNK_OVERLAP = 50
@@ -64,12 +63,8 @@ def process_pdf_and_store(pdf_path: str):
             # 用 uuid 而不是从 0 计数，避免和知识库里已有文档的 id 冲突
             ids.append(str(uuid.uuid4()))
 
-    chroma_client = chromadb.PersistentClient(path="./chroma_db")
     # 不再删除已有 collection，新讲义是累加进知识库，不会覆盖之前上传的文档
-    collection = chroma_client.get_or_create_collection(
-        name="course_materials",
-        embedding_function=embedding_function
-    )
+    collection = get_collection()
 
     collection.add(
         documents=documents,

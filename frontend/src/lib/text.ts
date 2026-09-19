@@ -14,6 +14,18 @@ export const uiText = {
     noFileAlert: "请先选择文件",
     uploading: "解析中，请稍候...",
     uploadFailedPrefix: "上传失败: ",
+    selectedCount: (n: number) => `已选择 ${n} 个文件`,
+    fileStatusPending: "等待上传",
+    fileStatusUploading: "解析中...",
+    fileStatusSuccess: "已成功解析并倒入知识库",
+  },
+
+  documents: {
+    heading: "知识库里的讲义",
+    empty: "知识库还是空的，上传第一份讲义吧",
+    loading: "加载中...",
+    loadFailedPrefix: "加载知识库列表失败: ",
+    chunkAndPageInfo: (chunks: number, pages: number) => `${chunks} 个片段 · 共 ${pages} 页`,
   },
 
   chat: {

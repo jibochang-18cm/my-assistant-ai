@@ -7,14 +7,12 @@
 不用再一个个手动通过网页重新上传。
 """
 import glob
-import chromadb
 
+from db import _chroma_client, COLLECTION_NAME
 from ingest import process_pdf_and_store
 
-chroma_client = chromadb.PersistentClient(path="./chroma_db")
-
 try:
-    chroma_client.delete_collection("course_materials")
+    _chroma_client.delete_collection(COLLECTION_NAME)
     print("已清空旧的知识库")
 except Exception:
     print("知识库原本就是空的，直接开始重建")

@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from routers import upload, chat
+from routers import upload, chat, documents
 
 app = FastAPI(title="高校课程 AI 助教 API")
 
@@ -15,6 +15,7 @@ app.add_middleware(
 
 app.include_router(upload.router)
 app.include_router(chat.router)
+app.include_router(documents.router)
 
 if __name__ == "__main__":
     import uvicorn

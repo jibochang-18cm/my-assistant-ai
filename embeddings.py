@@ -11,3 +11,7 @@ CHINESE_EMBEDDING_MODEL = "BAAI/bge-small-zh-v1.5"
 embedding_function = embedding_functions.SentenceTransformerEmbeddingFunction(
     model_name=CHINESE_EMBEDDING_MODEL
 )
+
+# bge 系列模型是非对称检索模型：官方建议只给"提问"加这个引导前缀，
+# 讲义原文不用加，这样问题和内容的向量会更匹配，检索精度明显更好。
+QUERY_INSTRUCTION = "为这个句子生成表示以用于检索相关文章："

@@ -114,6 +114,114 @@ body {
     color: var(--color-text-muted);
 }
 
+/* ===== 多文件上传：每个文件的状态列表 ===== */
+.upload-file-list {
+    list-style: none;
+    margin: 8px 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.upload-file-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 6px 10px;
+    border-radius: var(--radius-md);
+    background: var(--color-bg);
+    font-size: 0.88rem;
+}
+
+.upload-file-name {
+    color: var(--color-text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.upload-file-size {
+    color: var(--color-text-muted);
+    font-size: 0.82rem;
+}
+
+.upload-file-status {
+    flex-shrink: 0;
+    color: var(--color-text-muted);
+}
+
+.upload-file-item.status-success .upload-file-status {
+    color: #16a34a;
+}
+
+.upload-file-item.status-error .upload-file-status {
+    color: #dc2626;
+}
+
+/* ===== 知识库文档列表 ===== */
+.doc-list-heading {
+    margin: 20px 0 10px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.doc-list-status {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+}
+
+.doc-list-error {
+    color: #dc2626;
+}
+
+.doc-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.doc-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-bg);
+}
+
+.doc-icon {
+    font-size: 1.1rem;
+    line-height: 1.4;
+}
+
+.doc-info {
+    min-width: 0;
+    flex: 1;
+}
+
+.doc-name {
+    font-size: 0.92rem;
+    color: var(--color-text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.doc-meta {
+    margin-top: 2px;
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+}
+
 /* ===== 按钮 ===== */
 button {
     background: var(--color-primary);

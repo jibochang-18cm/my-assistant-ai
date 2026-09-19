@@ -1,9 +1,10 @@
 import os
-import chromadb
 from openai import OpenAI
 from dotenv import load_dotenv
 
-from embeddings import embedding_function
+from db import get_collection
+from embeddings import embedding_function, QUERY_INSTRUCTION
+from utils import display_name
 
 load_dotenv()
 DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
@@ -12,27 +13,30 @@ client = OpenAI(
     base_url="https://api.deepseek.com"
 )
 
-chroma_client = chromadb.PersistentClient(path="./chroma_db")
+RETRIEVAL_TOP_K = 5
 
-def _display_name(source_path: str) -> str:
-    """把存储的文件路径变成人类可读的讲义名，去掉 uploads_ 前缀"""
-    name = os.path.basename(source_path)
-    if name.startswith("uploads_"):
-        name = name[len("uploads_"):]
-    return name
+def _build_retrieval_query(query: str, history: list) -> str:
+    """把最近一轮用户提问拼进检索用的 query，这样"详细说说第一项"这种
+    指代不明的追问也能带着上一轮的话题去检索，而不是拿一句没有实际内容
+    的话去匹配（这句本身几乎检索不到任何东西）"""
+    last_user_turns = [msg["content"] for msg in history[-4:] if msg.get("role") == "user"]
+    if last_user_turns:
+        return last_user_turns[-1] + " " + query
+    return query
 
 def ask_ai_assistant_stream(query: str,history: list = []):
-    collection = chroma_client.get_or_create_collection(
-        name="course_materials",
-        embedding_function=embedding_function
-    )
+    collection = get_collection()
     if collection.count() == 0:
        yield "知识库目前是空的，请先在上方上传一份 PDF 课程讲义！"
        return
 
+    retrieval_query = _build_retrieval_query(query, history)
+    # bge 模型对"提问"需要加引导前缀才能发挥最佳检索效果，讲义原文不用加
+    query_embedding = embedding_function([QUERY_INSTRUCTION + retrieval_query])
+
     results = collection.query(
-        query_texts=[query],
-        n_results=min(3,collection.count())
+        query_embeddings=query_embedding,
+        n_results=min(RETRIEVAL_TOP_K,collection.count())
     )
 
     retrieved_docs = results['documents'][0]
@@ -40,7 +44,7 @@ def ask_ai_assistant_stream(query: str,history: list = []):
     context_str = ""
     sources = []
     for doc, meta in zip(retrieved_docs, retrieved_metas):
-        doc_name = _display_name(meta["source"])
+        doc_name = display_name(meta["source"])
         context_str += f"\n--- 来自《{doc_name}》第{meta['page']}页 ---\n{doc}\n"
         sources.append(f"《{doc_name}》第{meta['page']}页")
 
